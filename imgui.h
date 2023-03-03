@@ -2808,6 +2808,7 @@ struct ImFontAtlas
     // NB: Make sure that your string are UTF-8 and NOT in your local code page. In C++11, you can create UTF-8 string literal using the u8"Hello world" syntax. See FAQ for details.
     // NB: Consider using ImFontGlyphRangesBuilder to build glyph ranges from textual data.
     IMGUI_API const ImWchar*    GetGlyphRangesDefault();                // Basic Latin, Extended Latin
+    IMGUI_API const ImWchar*    GetGlyphRangesFULL();                   // Full unicode (as much as possible)
     IMGUI_API const ImWchar*    GetGlyphRangesGreek();                  // Default + Greek and Coptic
     IMGUI_API const ImWchar*    GetGlyphRangesKorean();                 // Default + Korean characters
     IMGUI_API const ImWchar*    GetGlyphRangesJapanese();               // Default + Hiragana, Katakana, Half-Width, Selection of 2999 Ideographs

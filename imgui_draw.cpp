@@ -2816,6 +2816,16 @@ const ImWchar*   ImFontAtlas::GetGlyphRangesDefault()
     return &ranges[0];
 }
 
+const ImWchar*   ImFontAtlas::GetGlyphRangesFULL()
+{
+    static const ImWchar ranges[] =
+    {
+        0x0020, 0xFFFE, // Full unicode (as much as possible)
+        0,
+    };
+    return &ranges[0];
+}
+
 const ImWchar*   ImFontAtlas::GetGlyphRangesGreek()
 {
     static const ImWchar ranges[] =
