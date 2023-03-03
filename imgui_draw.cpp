@@ -3168,6 +3168,27 @@ static ImWchar FindFirstExistingGlyph(ImFont* font, const ImWchar* candidate_cha
     return (ImWchar)-1;
 }
 
+//-----------------------------------------------
+bool raqm_complex = false;
+void ImFont::EnableComplexTextLayout()
+{
+    raqm_complex = true;
+}
+void ImFont::DisableComplexTextLayout(bool enable_raqm_library)
+{
+    raqm_complex = false;
+}
+
+//  
+void TextInterpolation(ImStrv *buf_out,const char* fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    ImFormatStringToTempBufferV(buf_out, fmt, args);
+    va_end(args);
+}
+//-----------------------------------------------
+
 void ImFont::BuildLookupTable()
 {
     int max_codepoint = 0;
