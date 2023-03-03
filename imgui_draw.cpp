@@ -3168,6 +3168,14 @@ static ImWchar FindFirstExistingGlyph(ImFont* font, const ImWchar* candidate_cha
     return (ImWchar)-1;
 }
 
+//-----------------------------------------------
+bool raqm_complex = false;
+void ImFont::SetComplexTextLayout(bool enable_raqm_library)
+{
+    raqm_complex = enable_raqm_library;
+}
+//-----------------------------------------------
+
 void ImFont::BuildLookupTable()
 {
     int max_codepoint = 0;
