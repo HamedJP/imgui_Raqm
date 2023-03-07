@@ -3996,14 +3996,14 @@ bool ImGui::IsClippedEx(const ImRect& bb, ImGuiID id)
 }
 
 // This is also inlined in ItemAdd()
-// Note: if ImGuiItemStatusFlags_HasDisplayRect is set, user needs to set window->DC.LastItemDisplayRect!
+// Note: if ImGuiItemStatusFlags_HasDisplayRect is set, user needs to set g.LastItemData.DisplayRect.
 void ImGui::SetLastItemData(ImGuiID item_id, ImGuiItemFlags in_flags, ImGuiItemStatusFlags item_flags, const ImRect& item_rect)
 {
     ImGuiContext& g = *GImGui;
     g.LastItemData.ID = item_id;
     g.LastItemData.InFlags = in_flags;
     g.LastItemData.StatusFlags = item_flags;
-    g.LastItemData.Rect = item_rect;
+    g.LastItemData.Rect = g.LastItemData.NavRect = item_rect;
 }
 
 float ImGui::CalcWrapWidthForPos(const ImVec2& pos, float wrap_pos_x)
@@ -4576,6 +4576,11 @@ void ImGui::NewFrame()
     UpdateDebugToolStackQueries();
     if (g.DebugLocateFrames > 0 && --g.DebugLocateFrames == 0)
         g.DebugLocateId = 0;
+    if (g.DebugLogClipperAutoDisableFrames > 0 && --g.DebugLogClipperAutoDisableFrames == 0)
+    {
+        DebugLog("(Auto-disabled ImGuiDebugLogFlags_EventClipper to avoid spamming)\n");
+        g.DebugLogFlags &= ~ImGuiDebugLogFlags_EventClipper;
+    }
 
     // Create implicit/fallback window - which we will only render it if the user has added something to it.
     // We don't use "Debug" to avoid colliding with user trying to create a "Debug" window with custom flags.
@@ -6395,13 +6400,13 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
             }
         }
 
-        // [Test Engine] Register whole window in the item system
+        // [Test Engine] Register whole window in the item system (before submitting further decorations)
 #ifdef IMGUI_ENABLE_TEST_ENGINE
         if (g.TestEngineHookItems)
         {
             IM_ASSERT(window->IDStack.Size == 1);
             window->IDStack.Size = 0; // As window->IDStack[0] == window->ID here, make sure TestEngine doesn't erroneously see window as parent of itself.
-            IMGUI_TEST_ENGINE_ITEM_ADD(window->Rect(), window->ID);
+            IMGUI_TEST_ENGINE_ITEM_ADD(window->ID, window->Rect(), NULL);
             IMGUI_TEST_ENGINE_ITEM_INFO(window->ID, window->Name, (g.HoveredWindow == window) ? ImGuiItemStatusFlags_HoveredRect : 0);
             window->IDStack.Size = 1;
         }
@@ -6642,10 +6647,10 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
             DebugLocateItemResolveWithLastItem();
 #endif
 
-        // [Test Engine] Register title bar / tab
+        // [Test Engine] Register title bar / tab with MoveId.
 #ifdef IMGUI_ENABLE_TEST_ENGINE
         if (!(window->Flags & ImGuiWindowFlags_NoTitleBar))
-            IMGUI_TEST_ENGINE_ITEM_ADD(g.LastItemData.Rect, g.LastItemData.ID);
+            IMGUI_TEST_ENGINE_ITEM_ADD(g.LastItemData.ID, g.LastItemData.Rect, &g.LastItemData);
 #endif
     }
     else
@@ -9224,7 +9229,7 @@ bool ImGui::ItemAdd(const ImRect& bb, ImGuiID id, const ImRect* nav_bb_arg, ImGu
 
 #ifdef IMGUI_ENABLE_TEST_ENGINE
     if (id != 0)
-        IMGUI_TEST_ENGINE_ITEM_ADD(nav_bb_arg ? *nav_bb_arg : bb, id);
+        IMGUI_TEST_ENGINE_ITEM_ADD(id, g.LastItemData.NavRect, &g.LastItemData);
 #endif
 
     // Clipping test
@@ -14218,7 +14223,7 @@ void ImGui::ShowDebugLogWindow(bool* p_open)
     SameLine(); CheckboxFlags("Focus", &g.DebugLogFlags, ImGuiDebugLogFlags_EventFocus);
     SameLine(); CheckboxFlags("Popup", &g.DebugLogFlags, ImGuiDebugLogFlags_EventPopup);
     SameLine(); CheckboxFlags("Nav", &g.DebugLogFlags, ImGuiDebugLogFlags_EventNav);
-    SameLine(); CheckboxFlags("Clipper", &g.DebugLogFlags, ImGuiDebugLogFlags_EventClipper);
+    SameLine(); if (CheckboxFlags("Clipper", &g.DebugLogFlags, ImGuiDebugLogFlags_EventClipper)) { g.DebugLogClipperAutoDisableFrames = 2; }; if (IsItemHovered()) SetTooltip("Clipper log auto-disabled after 2 frames");
     SameLine(); CheckboxFlags("IO", &g.DebugLogFlags, ImGuiDebugLogFlags_EventIO);
 
     if (SmallButton("Clear"))
