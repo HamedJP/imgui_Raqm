@@ -2936,6 +2936,7 @@ struct ImFont
     IMGUI_API void              BuildLookupTable();
     IMGUI_API void              BuildRaqmLookupTable();
     IMGUI_API void TextInterpolation(const char **out_buf, const char **out_buf_end, const char *fmt, ...);
+    IMGUI_API void ImFont::utf8chr(const char **out_buf,int cp);
     IMGUI_API void ClearOutputData();
     IMGUI_API void              GrowIndex(int new_size);
     IMGUI_API void              AddGlyph(const ImFontConfig* src_cfg, ImWchar c, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float advance_x);

@@ -3237,7 +3237,17 @@ void ImFont::TextInterpolation(const char** out_buf, const char** out_buf_end,co
     va_end(args);
 }
 
-int *raqm_lookup;
+string ImFont::utf8chr(int cp)
+{
+    char c[5]={ 0x00,0x00,0x00,0x00,0x00 };
+    if     (cp<=0x7F) { c[0] = cp;  }
+    else if(cp<=0x7FF) { c[0] = (cp>>6)+192; c[1] = (cp&63)+128; }
+    else if(0xd800<=cp && cp<=0xdfff) {} //invalid block of utf8
+    else if(cp<=0xFFFF) { c[0] = (cp>>12)+224; c[1]= ((cp>>6)&63)+128; c[2]=(cp&63)+128; }
+    else if(cp<=0x10FFFF) { c[0] = (cp>>18)+240; c[1] = ((cp>>12)&63)+128; c[2] = ((cp>>6)&63)+128; c[3]=(cp&63)+128; }
+    return string(c);
+}
+
 void ImFont::BuildRaqmLookupTable()
 {
     printf("Start Raqm Lookup. Glyph size:%d\n",Glyphs.Size);
@@ -3262,12 +3272,14 @@ void ImFont::BuildRaqmLookupTable()
 
         if (raqm_buf != NULL)
         {
-            // ImStrv unicode_char;
             const char* unicode_char, *text_end;
-            // unsigned int mcode = Glyphs[i].Codepoint;
-            TextInterpolation(&unicode_char, &text_end, "%lc", codepoint);
-            // const char *s = unicode_char;
+            if (codepoint==173)
+            {
+                int tmp = 3;
+            }
 
+            // TextInterpolation(&unicode_char, &text_end, "%lc", codepoint);
+            unicode_char = utf8chr(codepoint);
             if (raqm_set_text_utf8(raqm_buf, unicode_char, strlen(unicode_char)) &&
                 raqm_set_freetype_face(raqm_buf, face) &&
                 raqm_set_par_direction(raqm_buf, dir) &&
@@ -3277,35 +3289,26 @@ void ImFont::BuildRaqmLookupTable()
                 qglyphs = raqm_get_glyphs(raqm_buf, &q_count);
                 if(max_raqm_codepoint<qglyphs[0].index)
                     max_raqm_codepoint = qglyphs[0].index;
-                // if (i < 64)
-                //     printf("glyph '%s': Codepoint: %d index: %d\n",unicode_char , Glyphs[i].Codepoint, qglyphs[0].index);
                 _raqmLookup[2 * i] = qglyphs[0].index;
                 _raqmLookup[2 * i + 1] = i;// (int)Glyphs[i].Codepoint;
-                // IndexRaqmLookup[qglyphs[0].index] = (ImWchar)i;
-                printf("%s: qindex: %d, GIndex:%d\n", unicode_char, qglyphs[0].index, i);
+                printf("%d- '%s': qindex: %d, codepoint: %d\n",i, unicode_char, qglyphs[0].index, codepoint);
             }
         }
     }
 
-
     if(max_raqm_codepoint + 1 > IndexRaqmLookup.Size)
         IndexRaqmLookup.resize(max_raqm_codepoint + 1, -1.0f);
     
-    printf("  ->  End _raqmLookup[i * 2]\n");
-    raqm_lookup = _raqmLookup;
     for (size_t i = 0; i < Glyphs.Size; i++)
     {
         IndexRaqmLookup[_raqmLookup[2 * i]] = (ImWchar)_raqmLookup[2 * i + 1];
     }
-    printf("End Raqm Lookup\n");
 }
 
 //-----------------------------------------------
 
 void ImFont::BuildLookupTable()
 {
-    printf("Start Lookup\n");
-
     int max_codepoint = 0;
     for (int i = 0; i != Glyphs.Size; i++)
         max_codepoint = ImMax(max_codepoint, (int)Glyphs[i].Codepoint);
@@ -3389,7 +3392,6 @@ void ImFont::BuildLookupTable()
 
     if(raqm_complex)
         BuildRaqmLookupTable();
-    printf("End Lookup\n");
 }
 
 // API is designed this way to avoid exposing the 4K page size
@@ -3984,6 +3986,7 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 
     //---------------------------------------------------------
     //---------------------------------------------------------------------------
+    // if(false)//raqm_complex)
     if(raqm_complex)
     {
         if(raqm_complex && library!=NULL && face!=NULL && raqm_buf!=NULL)
@@ -3992,60 +3995,42 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
             size_t q_count;
             raqm_glyph_t *qglyphs;
 
-            // raqm_t *rq = raqm_create();
-            // raqm_buf = raqm_create();
             if (raqm_buf != NULL)
             {
                 raqm_direction_t dir = RAQM_DIRECTION_DEFAULT;
-                int mystrlength = strlen(text_begin);
-                bool is_raqm_set_text_utf8 = raqm_set_text_utf8(raqm_buf, text_begin, mystrlength);
-                bool is_raqm_set_freetype_face = raqm_set_freetype_face(raqm_buf, face);
-                bool is_raqm_set_par_direction = raqm_set_par_direction(raqm_buf, dir);
-                bool is_raqm_set_language = raqm_set_language(raqm_buf, "fa", 0, strlen(text_begin));
-                bool is_raqm_layout = raqm_layout(raqm_buf);
+                int mystrlength = text_end-text_begin ;
 
-                if (is_raqm_set_text_utf8&&
-                    is_raqm_set_freetype_face &&
-                    is_raqm_set_par_direction &&
-                    is_raqm_set_language &&
-                    is_raqm_layout)
+                if (raqm_set_text_utf8(raqm_buf, text_begin, mystrlength)&&
+                    raqm_set_freetype_face(raqm_buf, face)&&
+                    raqm_set_par_direction(raqm_buf, dir)&&
+                    raqm_set_language(raqm_buf, "fa", 0, mystrlength)&&
+                    raqm_layout(raqm_buf))
                 {
                     qglyphs = raqm_get_glyphs(raqm_buf, &q_count);
 
                     for (size_t i = 0; i < q_count; i++)
                     {
-                        const ImFontGlyph *glyph = NULL; // FindGlyph((ImWchar)c);
-                        int gSize = Glyphs.Size;
-                        for (size_t j = 0; j < gSize; j++)
+                        int qindex = qglyphs[i].index;
+                        const ImFontGlyph *qglyph = FindGlyphRaqm(qindex);
+                        if (qglyph == NULL)
                         {
-                            if (raqm_lookup[j * 2] == qglyphs[i].index)
-                            {
-                                int cp = raqm_lookup[j * 2 + 1];
-                                glyph = &Glyphs[cp];
-                                break;
-                            }
+                            continue;
                         }
-                        if (glyph == NULL)
-                        {
-                            glyph = FallbackGlyph;
-                            // printf("Lost letter: %lc\n",text_begin[i]);
-                            // continue;
-                        }
-                        float char_width = glyph->AdvanceX * scale;
-                        if (glyph->Visible)
+                        float char_width = qglyph->AdvanceX * scale;
+                        if (qglyph->Visible)
                         {
                             // We don't do a second finer clipping test on the Y axis as we've already skipped anything before clip_rect.y and exit once we pass clip_rect.w
-                            float x1 = x + glyph->X0 * scale;
-                            float x2 = x + glyph->X1 * scale;
-                            float y1 = y + glyph->Y0 * scale;
-                            float y2 = y + glyph->Y1 * scale;
+                            float x1 = x + qglyph->X0 * scale;
+                            float x2 = x + qglyph->X1 * scale;
+                            float y1 = y + qglyph->Y0 * scale;
+                            float y2 = y + qglyph->Y1 * scale;
                             if (x1 <= clip_rect.z && x2 >= clip_rect.x)
                             {
                                 // Render a character
-                                float u1 = glyph->U0;
-                                float v1 = glyph->V0;
-                                float u2 = glyph->U1;
-                                float v2 = glyph->V1;
+                                float u1 = qglyph->U0;
+                                float v1 = qglyph->V0;
+                                float u2 = qglyph->U1;
+                                float v2 = qglyph->V1;
 
                                 // CPU side clipping used to fit text in their frame when the frame is too small. Only does clipping for axis aligned quads.
                                 if (cpu_fine_clip)
@@ -4078,7 +4063,7 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
                                 }
 
                                 // Support for untinted glyphs
-                                ImU32 glyph_col = glyph->Colored ? col_untinted : col;
+                                ImU32 glyph_col = qglyph->Colored ? col_untinted : col;
 
                                 // We are NOT calling PrimRectUV() here because non-inlined causes too much overhead in a debug builds. Inlined here:
                                 {
@@ -4117,8 +4102,6 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
                         x += char_width;
                     }
                 }
-
-                // raqm_destroy(rq);
             }
         }
     //---------------------------------------------------------------------------
