@@ -66,6 +66,7 @@ Index of this file:
 #include <stdarg.h>                 // va_list, va_start, va_end
 #include <stddef.h>                 // ptrdiff_t, NULL
 #include <string.h>                 // memset, memmove, memcpy, strlen, strchr, strcpy, strcmp
+#include <string>                   // I don't know why but when It has more FPS with this line !!!🤷‍♂️
 
 // Define attributes of all API symbols declarations (e.g. for DLL under Windows)
 // IMGUI_API is used for core imgui functions, IMGUI_IMPL_API is used for the default backends files (imgui_impl_xxx.h)
@@ -2935,9 +2936,7 @@ struct ImFont
     // [Internal] Don't use!
     IMGUI_API void              BuildLookupTable();
     IMGUI_API void              BuildRaqmLookupTable();
-    IMGUI_API void TextInterpolation(const char **out_buf, const char **out_buf_end, const char *fmt, ...);
-    IMGUI_API void ImFont::utf8chr(const char **out_buf,int cp);
-    IMGUI_API void ClearOutputData();
+    IMGUI_API void              ClearOutputData();
     IMGUI_API void              GrowIndex(int new_size);
     IMGUI_API void              AddGlyph(const ImFontConfig* src_cfg, ImWchar c, float x0, float y0, float x1, float y1, float u0, float v0, float u1, float v1, float advance_x);
     IMGUI_API void              AddRemapChar(ImWchar dst, ImWchar src, bool overwrite_dst = true); // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
