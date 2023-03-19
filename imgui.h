@@ -54,6 +54,7 @@ Index of this file:
 #include IMGUI_USER_CONFIG
 #endif
 #include "imconfig.h"
+#include "../libraqm/src/raqm.h"
 
 #ifndef IMGUI_DISABLE
 
@@ -2932,6 +2933,7 @@ struct ImFont
     IMGUI_API void              RenderChar(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, ImWchar c) const;
     IMGUI_API void              RenderComplexText(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0.0f, bool cpu_fine_clip = false) const;
     IMGUI_API void              RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, ImU32 col, const ImVec4& clip_rect, const char* text_begin, const char* text_end, float wrap_width = 0.0f, bool cpu_fine_clip = false) const;
+    IMGUI_API void              RenderGlyphs(ImDrawList *draw_list, float size, const ImVec2 &pos, ImU32 col, const ImVec4 &clip_rect, raqm_glyph_t *qglyphs, size_t q_count, float wrap_width, bool cpu_fine_clip) const;
 
     // [Internal] Don't use!
     IMGUI_API void              BuildLookupTable();
