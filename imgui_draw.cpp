@@ -1,3 +1,5 @@
+#include <chrono>
+using namespace std::chrono;
 // dear imgui, v1.89.4 WIP
 // (drawing and font code)
 
@@ -3286,7 +3288,12 @@ void ImFont::BuildRaqmLookupTable()
     size_t q_count;
     raqm_direction_t dir = RAQM_DIRECTION_DEFAULT;
     raqm_glyph_t *qglyphs;
-    int _raqmLookup[Glyphs.Size * 2];
+    int _raqmLookup[Glyphs.Size];
+
+                if (!raqm_set_invisible_glyph (raqm_buf,-1))
+                {
+                    int tmp = 0;
+                }
     for (int i = 0; i < Glyphs.Size; i++)
     {
         int codepoint = (int)Glyphs[i].Codepoint;
@@ -3296,10 +3303,6 @@ void ImFont::BuildRaqmLookupTable()
         {
             char unicode_char[4];
             int mystrlength = utf8_encode(unicode_char, codepoint);
-            // if (codepoint==173)
-            // {
-            //     int tmp = 3;
-            // }
 
             if (raqm_set_text_utf8(raqm_buf, unicode_char, mystrlength) &&
                 raqm_set_freetype_face(raqm_buf, face) &&
@@ -3307,27 +3310,23 @@ void ImFont::BuildRaqmLookupTable()
                 raqm_set_language(raqm_buf, "fa", 0, mystrlength) &&
                 raqm_layout(raqm_buf))
             {
-                if (!raqm_set_invisible_glyph (raqm_buf,-1))
-                {
-                    int tmp = 0;
-                }
                 
                 qglyphs = raqm_get_glyphs(raqm_buf, &q_count);
-                if(max_raqm_codepoint<qglyphs[0].index)
-                    max_raqm_codepoint = qglyphs[0].index;
-                _raqmLookup[2 * i] = qglyphs[0].index;
-                _raqmLookup[2 * i + 1] = i;// (int)Glyphs[i].Codepoint;
+                if(max_raqm_codepoint<qglyphs[q_count-1].index)
+                    max_raqm_codepoint = qglyphs[q_count-1].index;
+                _raqmLookup[i] = qglyphs[q_count-1].index;
                 // printf("%d- '%s': qindex: %d, codepoint: %d\n",i, unicode_char, qglyphs[0].index, codepoint);
             }
         }
     }
-
-    if(max_raqm_codepoint + 1 > IndexRaqmLookup.Size)
+    printf("\n");
+    if (max_raqm_codepoint + 1 > IndexRaqmLookup.Size)
         IndexRaqmLookup.resize(max_raqm_codepoint + 1, -1.0f);
     
     for (size_t i = 0; i < Glyphs.Size; i++)
     {
-        IndexRaqmLookup[_raqmLookup[2 * i]] = (ImWchar)_raqmLookup[2 * i + 1];
+        if(IndexRaqmLookup[_raqmLookup[ i]] <1)//_raqmLookup[2 * i + 1];
+        IndexRaqmLookup[_raqmLookup[ i]] = (ImWchar)i;//_raqmLookup[2 * i + 1];
     }
 }
 
@@ -3335,6 +3334,8 @@ void ImFont::BuildRaqmLookupTable()
 
 void ImFont::BuildLookupTable()
 {
+            auto beg = high_resolution_clock::now();
+
     int max_codepoint = 0;
     for (int i = 0; i != Glyphs.Size; i++)
         max_codepoint = ImMax(max_codepoint, (int)Glyphs[i].Codepoint);
@@ -3416,8 +3417,14 @@ void ImFont::BuildLookupTable()
         if (IndexAdvanceX[i] < 0.0f)
             IndexAdvanceX[i] = FallbackAdvanceX;
 
+auto mid = high_resolution_clock::now();
     if(raqm_complex)
         BuildRaqmLookupTable();
+    auto end = high_resolution_clock::now();
+        auto duration_mid = duration_cast<milliseconds>(mid - beg);
+        auto duration_end = duration_cast<milliseconds>(end - mid);
+        auto duration_all = duration_cast<milliseconds>(end - beg);
+    printf("Elapsed Time:   Original:   %ld\n\t\tRaqmLookup: %ld\n\t\tAll:\t    %ld\n", duration_mid.count(), duration_end.count(),duration_all.count());
 }
 
 // API is designed this way to avoid exposing the 4K page size
@@ -4016,100 +4023,6 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
                                 // my_pos.y=y;
 
                                 RenderGlyphs(draw_list, size, my_pos, col, clip_rect, qglyphs,q_count,wrap_width,cpu_fine_clip);
-                                // for (size_t i = 0; i < q_count; i++)
-                                // {
-                                //     int qindex = qglyphs[i].index;
-                                //     const ImFontGlyph *qglyph = FindGlyphRaqm(qindex);
-                                //     if (qglyph == NULL)
-                                //     {
-                                //         continue;
-                                //     }
-                                //     float char_width = qglyph->AdvanceX * scale;
-                                //     if (qglyph->Visible)
-                                //     {
-                                //         // We don't do a second finer clipping test on the Y axis as we've already skipped anything before clip_rect.y and exit once we pass clip_rect.w
-                                //         float x1 = x + qglyph->X0 * scale;
-                                //         float x2 = x + qglyph->X1 * scale;
-                                //         float y1 = y + qglyph->Y0 * scale;
-                                //         float y2 = y + qglyph->Y1 * scale;
-                                //         if (x1 <= clip_rect.z && x2 >= clip_rect.x)
-                                //         {
-                                //             // Render a character
-                                //             float u1 = qglyph->U0;
-                                //             float v1 = qglyph->V0;
-                                //             float u2 = qglyph->U1;
-                                //             float v2 = qglyph->V1;
-
-                                //             // CPU side clipping used to fit text in their frame when the frame is too small. Only does clipping for axis aligned quads.
-                                //             if (cpu_fine_clip)
-                                //             {
-                                //                 if (x1 < clip_rect.x)
-                                //                 {
-                                //                     u1 = u1 + (1.0f - (x2 - clip_rect.x) / (x2 - x1)) * (u2 - u1);
-                                //                     x1 = clip_rect.x;
-                                //                 }
-                                //                 if (y1 < clip_rect.y)
-                                //                 {
-                                //                     v1 = v1 + (1.0f - (y2 - clip_rect.y) / (y2 - y1)) * (v2 - v1);
-                                //                     y1 = clip_rect.y;
-                                //                 }
-                                //                 if (x2 > clip_rect.z)
-                                //                 {
-                                //                     u2 = u1 + ((clip_rect.z - x1) / (x2 - x1)) * (u2 - u1);
-                                //                     x2 = clip_rect.z;
-                                //                 }
-                                //                 if (y2 > clip_rect.w)
-                                //                 {
-                                //                     v2 = v1 + ((clip_rect.w - y1) / (y2 - y1)) * (v2 - v1);
-                                //                     y2 = clip_rect.w;
-                                //                 }
-                                //                 if (y1 >= y2)
-                                //                 {
-                                //                     x += char_width;
-                                //                     continue;
-                                //                 }
-                                //             }
-
-                                //             // Support for untinted glyphs
-                                //             ImU32 glyph_col = qglyph->Colored ? col_untinted : col;
-
-                                //             // We are NOT calling PrimRectUV() here because non-inlined causes too much overhead in a debug builds. Inlined here:
-                                //             {
-                                //                 vtx_write[0].pos.x = x1;
-                                //                 vtx_write[0].pos.y = y1;
-                                //                 vtx_write[0].col = glyph_col;
-                                //                 vtx_write[0].uv.x = u1;
-                                //                 vtx_write[0].uv.y = v1;
-                                //                 vtx_write[1].pos.x = x2;
-                                //                 vtx_write[1].pos.y = y1;
-                                //                 vtx_write[1].col = glyph_col;
-                                //                 vtx_write[1].uv.x = u2;
-                                //                 vtx_write[1].uv.y = v1;
-                                //                 vtx_write[2].pos.x = x2;
-                                //                 vtx_write[2].pos.y = y2;
-                                //                 vtx_write[2].col = glyph_col;
-                                //                 vtx_write[2].uv.x = u2;
-                                //                 vtx_write[2].uv.y = v2;
-                                //                 vtx_write[3].pos.x = x1;
-                                //                 vtx_write[3].pos.y = y2;
-                                //                 vtx_write[3].col = glyph_col;
-                                //                 vtx_write[3].uv.x = u1;
-                                //                 vtx_write[3].uv.y = v2;
-                                //                 idx_write[0] = (ImDrawIdx)(vtx_index);
-                                //                 idx_write[1] = (ImDrawIdx)(vtx_index + 1);
-                                //                 idx_write[2] = (ImDrawIdx)(vtx_index + 2);
-                                //                 idx_write[3] = (ImDrawIdx)(vtx_index);
-                                //                 idx_write[4] = (ImDrawIdx)(vtx_index + 2);
-                                //                 idx_write[5] = (ImDrawIdx)(vtx_index + 3);
-                                //                 vtx_write += 4;
-                                //                 vtx_index += 4;
-                                //                 idx_write += 6;
-                                //             }
-                                //         }
-                                //     }
-                                //     x += char_width;
-                                // }
-                            
                             }
                         }
                     }
