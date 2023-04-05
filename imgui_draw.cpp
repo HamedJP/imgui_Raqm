@@ -2876,6 +2876,29 @@ const ImWchar*   ImFontAtlas::GetGlyphRangesFULL()
     return &ranges[0];
 }
 
+const ImWchar*   ImFontAtlas::GetGlyphRangesArabic()
+{
+    static const ImWchar ranges[] =
+    {
+        0x0020, 0x00FF, // Basic Latin + Latin Supplement
+        0x0600, 0x06FF,
+        0x0750, 0x077F,
+        0x0870, 0x088E,
+        0x0890, 0x0891,
+        0x08A0, 0x08FF,
+        0xFB50, 0xFBC2,
+        0xFBD3, 0xFD8F,
+        0xFD92, 0xFDC7,
+        0xFDCF, 0xFDCF,
+        0xFDF0, 0xFDFF,
+        0xFE70, 0xFEF4,
+        0xFE76, 0xFEFB,
+        0xFEFF, 0xFEFF,
+        0,
+    };
+    return &ranges[0];
+}
+
 const ImWchar*   ImFontAtlas::GetGlyphRangesGreek()
 {
     static const ImWchar ranges[] =
@@ -3310,11 +3333,17 @@ void ImFont::BuildRaqmLookupTable()
                 raqm_set_language(raqm_buf, "fa", 0, mystrlength) &&
                 raqm_layout(raqm_buf))
             {
-                
                 qglyphs = raqm_get_glyphs(raqm_buf, &q_count);
-                if(max_raqm_codepoint<qglyphs[q_count-1].index)
-                    max_raqm_codepoint = qglyphs[q_count-1].index;
-                _raqmLookup[i] = qglyphs[q_count-1].index;
+                if(0<q_count){
+                    if(max_raqm_codepoint<qglyphs[q_count-1].index)
+                    {
+                        max_raqm_codepoint = qglyphs[q_count-1].index;
+                    }
+                    _raqmLookup[i] = qglyphs[q_count-1].index;
+                }
+                else{
+                    _raqmLookup[i] = -1;
+                }
                 // printf("%d- '%s': qindex: %d, codepoint: %d\n",i, unicode_char, qglyphs[0].index, codepoint);
             }
         }
@@ -3325,8 +3354,11 @@ void ImFont::BuildRaqmLookupTable()
     
     for (size_t i = 0; i < Glyphs.Size; i++)
     {
-        if(IndexRaqmLookup[_raqmLookup[ i]] <1)//_raqmLookup[2 * i + 1];
-        IndexRaqmLookup[_raqmLookup[ i]] = (ImWchar)i;//_raqmLookup[2 * i + 1];
+        if (0 < _raqmLookup[ i])
+        {
+            if(IndexRaqmLookup[_raqmLookup[ i]] <1)//_raqmLookup[2 * i + 1];
+                IndexRaqmLookup[_raqmLookup[ i]] = (ImWchar)i;//_raqmLookup[2 * i + 1];
+        }
     }
 }
 
@@ -3334,7 +3366,7 @@ void ImFont::BuildRaqmLookupTable()
 
 void ImFont::BuildLookupTable()
 {
-            auto beg = high_resolution_clock::now();
+    auto beg = high_resolution_clock::now();
 
     int max_codepoint = 0;
     for (int i = 0; i != Glyphs.Size; i++)
