@@ -3247,3 +3247,15 @@ extern const char*  ImGuiTestEngine_FindItemDebugLabel(ImGuiContext* ctx, ImGuiI
 #endif
 
 #endif // #ifndef IMGUI_DISABLE
+
+
+//-------------- ComplexText variables for Raqm library ----------------------------
+namespace ComplexText{
+    inline FT_Library  library = NULL;
+    inline FT_Face     face = NULL;
+    inline raqm_t      *raqm_buf;
+
+    inline bool        raqm_complex = false;
+}
+//------------------------------------------
+
