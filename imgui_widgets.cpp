@@ -149,6 +149,7 @@ static ImVec2           InputTextCalcTextSizeW(ImGuiContext* ctx, const ImWchar*
 
 void ImGui::TextEx(const char* text, const char* text_end, ImGuiTextFlags flags)
 {
+
     ImGuiWindow* window = GetCurrentWindow();
     if (window->SkipItems)
         return;
@@ -157,7 +158,10 @@ void ImGui::TextEx(const char* text, const char* text_end, ImGuiTextFlags flags)
     // Accept null ranges
     if (text == text_end)
         text = text_end = "";
-
+    //---------------------------------
+    const char *new_text, new_text_end;
+    Text_to_ComplexUnicode(text, text_end, new_text, new_text_end);
+    //---------------------------------
     // Calculate length
     const char* text_begin = text;
     if (text_end == NULL)

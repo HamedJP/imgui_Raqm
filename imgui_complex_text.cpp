@@ -64,7 +64,8 @@ int utf8_encode(char *out, uint32_t utf)
 
 void ImFont::BuildRaqmLookupTable()
 {
-    printf("Start Raqm Lookup. Glyph size:%d\n",Glyphs.Size);
+    using namespace ComplexText;
+    printf("Start Raqm Lookup. Glyph size:%d\n", Glyphs.Size);
     int max_codepoint = 0;
     int max_raqm_codepoint = 0;
     for (int j = 0; j != Glyphs.Size; j++)
@@ -80,27 +81,27 @@ void ImFont::BuildRaqmLookupTable()
     raqm_glyph_t *qglyphs;
     int _raqmLookup[Glyphs.Size];
 
-                if (!raqm_set_invisible_glyph (ComplexText::raqm_buf,-1))
-                {
-                    int tmp = 0;
-                }
+    if (!raqm_set_invisible_glyph(raqm_buf, -1))
+    {
+        int tmp = 0;
+    }
     for (int i = 0; i < Glyphs.Size; i++)
     {
         int codepoint = (int)Glyphs[i].Codepoint;
-        raqm_clear_contents(ComplexText::raqm_buf);
+        raqm_clear_contents(raqm_buf);
 
-        if (ComplexText::raqm_buf != NULL)
+        if (raqm_buf != NULL)
         {
             char unicode_char[4];
             int mystrlength = utf8_encode(unicode_char, codepoint);
 
-            if (raqm_set_text_utf8(ComplexText::raqm_buf, unicode_char, mystrlength) &&
-                raqm_set_freetype_face(ComplexText::raqm_buf, ComplexText::face) &&
-                raqm_set_par_direction(ComplexText::raqm_buf, dir) &&
-                raqm_set_language(ComplexText::raqm_buf, "fa", 0, mystrlength) &&
-                raqm_layout(ComplexText::raqm_buf))
+            if (raqm_set_text_utf8(raqm_buf, unicode_char, mystrlength) &&
+                raqm_set_freetype_face(raqm_buf, face) &&
+                raqm_set_par_direction(raqm_buf, dir) &&
+                raqm_set_language(raqm_buf, "fa", 0, mystrlength) &&
+                raqm_layout(raqm_buf))
             {
-                qglyphs = raqm_get_glyphs(ComplexText::raqm_buf, &q_count);
+                qglyphs = raqm_get_glyphs(raqm_buf, &q_count);
                 if(0<q_count){
                     if(max_raqm_codepoint<qglyphs[q_count-1].index)
                     {
@@ -298,7 +299,7 @@ void ImFont::RenderGlyphs(ImDrawList* draw_list, float size, const ImVec2& pos, 
     draw_list->_VtxCurrentIdx = vtx_index;
 }
 
-void ImFont::Text_to_ComplexUnicode( const char* text_begin, const char* text_end, const char* out_text_begin, const char* out_text_end)
+const void ImFont::Text_to_ComplexUnicode( const char* text_begin, const char* text_end, const char* out_text_begin, const char* out_text_end)
 {
     using namespace ComplexText;
     if (!text_end)
@@ -308,6 +309,7 @@ void ImFont::Text_to_ComplexUnicode( const char* text_begin, const char* text_en
     const char *line_begin = text_begin;
 
     const char* s = text_begin;
+    std::string finalText;
 
     while (s < text_end)
     {
@@ -338,9 +340,14 @@ void ImFont::Text_to_ComplexUnicode( const char* text_begin, const char* text_en
                             raqm_layout(raqm_buf))
                         {
                             qglyphs = raqm_get_glyphs(raqm_buf, &q_count);
-                            // ImVec2 my_pos = ImVec2(x, y);
-                            // my_pos.x=x;
-                            // my_pos.y=y;
+                            for (size_t i = 0; i < q_count; i++)
+                            {
+                                const ImFontGlyph *qglyph = FindGlyphRaqm(qglyphs[i].index);
+                                char *mchar;
+                                int charL = utf8_encode(mchar, qglyph->Codepoint);
+                                finalText.append(mchar);
+                            }
+                            finalText.append("\n");
 
                             // RenderGlyphs(draw_list, size, my_pos, col, clip_rect, qglyphs, q_count, wrap_width, cpu_fine_clip);
                         }
@@ -371,8 +378,19 @@ void ImFont::Text_to_ComplexUnicode( const char* text_begin, const char* text_en
                     raqm_set_language(raqm_buf, "fa", 0, mystrlength) &&
                     raqm_layout(raqm_buf))
                 {
+                    qglyphs = raqm_get_glyphs(raqm_buf, &q_count);
+                    for (size_t i = 0; i < q_count; i++)
+                    {
+                        const ImFontGlyph *qglyph = FindGlyphRaqm(qglyphs[i].index);
+                        char *mchar;
+                        int charL = utf8_encode(mchar, qglyph->Codepoint);
+                        finalText.append(mchar);
+                    }
                 }
             }
         }
     }
+
+    out_text_begin = finalText.c_str();
+    out_text_end = out_text_begin + finalText.length();
 }
