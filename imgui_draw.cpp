@@ -1,6 +1,4 @@
-#include <chrono>
-using namespace std::chrono;
-// dear imgui, v1.89.4 WIP
+// dear imgui, v1.89.6 WIP
 // (drawing and font code)
 
 /*
@@ -23,6 +21,8 @@ Index of this file:
 // [SECTION] Default font data (ProggyClean.ttf)
 
 */
+#include <chrono>
+using namespace std::chrono;
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS
@@ -3969,6 +3969,7 @@ void ImGui::RenderArrow(ImDrawList* draw_list, ImVec2 pos, ImU32 col, ImGuiDir d
 
 void ImGui::RenderBullet(ImDrawList* draw_list, ImVec2 pos, ImU32 col)
 {
+    // FIXME-OPT: This should be baked in font.
     draw_list->AddCircleFilled(pos, draw_list->_Data->FontSize * 0.20f, col, 8);
 }
 
