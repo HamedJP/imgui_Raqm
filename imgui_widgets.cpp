@@ -158,10 +158,17 @@ void ImGui::TextEx(const char* text, const char* text_end, ImGuiTextFlags flags)
     // Accept null ranges
     if (text == text_end)
         text = text_end = "";
-    //---------------------------------
-    const char *new_text, new_text_end;
-    Text_to_ComplexUnicode(text, text_end, new_text, new_text_end);
-    //---------------------------------
+    // //---------------------------------
+    // int new_text_length;
+    // std::string new_string = Text_to_ComplexUnicode(text, text_end, &new_text_length);
+    // const char *new_text = new_string.c_str();
+    // printf("%d -> %s - %s :  %d \n", new_text, new_text, new_string, new_text_length);
+    // const char *new_text_end =new_text +strlen(new_text);
+
+    // text = new_text;
+    // text_end = new_text_end;
+
+    // //---------------------------------
     // Calculate length
     const char* text_begin = text;
     if (text_end == NULL)
@@ -4167,6 +4174,20 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
 
         // Take a copy of the initial buffer value (both in original UTF-8 format and converted to wchar)
         // From the moment we focused we are ignoring the content of 'buf' (unless we are in read-only mode)
+
+
+        
+    //---------------------------------
+    int new_text_length;
+    std::string new_string = Text_to_ComplexUnicode(buf, buf+(int)strlen(buf), &new_text_length);
+    const char *new_text = new_string.c_str();
+    // printf("%d -> %s - %s :  %d \n", new_text, new_text, new_string, new_text_length);
+    const char *new_text_end =new_text +strlen(new_text);
+
+    buf = (char*)new_text;
+
+    //---------------------------------
+
         const int buf_len = (int)strlen(buf);
         state->InitialTextA.resize(buf_len + 1);    // UTF-8. we use +1 to make sure that .Data is always pointing to at least an empty string.
         memcpy(state->InitialTextA.Data, buf, buf_len + 1);

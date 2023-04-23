@@ -299,8 +299,11 @@ void ImFont::RenderGlyphs(ImDrawList* draw_list, float size, const ImVec2& pos, 
     draw_list->_VtxCurrentIdx = vtx_index;
 }
 
-const void ImFont::Text_to_ComplexUnicode( const char* text_begin, const char* text_end, const char* out_text_begin, const char* out_text_end)
+std::string Text_to_ComplexUnicode( const char* text_begin, const char* text_end, int* out_text_length)
 {
+    ImGuiContext& g = *GImGui;
+    ImGuiWindow* window = g.CurrentWindow;
+
     using namespace ComplexText;
     if (!text_end)
         text_end = text_begin + strlen(text_begin); // ImGui:: functions generally already provides a valid text_end, so this is merely to handle direct calls.
@@ -342,8 +345,8 @@ const void ImFont::Text_to_ComplexUnicode( const char* text_begin, const char* t
                             qglyphs = raqm_get_glyphs(raqm_buf, &q_count);
                             for (size_t i = 0; i < q_count; i++)
                             {
-                                const ImFontGlyph *qglyph = FindGlyphRaqm(qglyphs[i].index);
-                                char *mchar;
+                                const ImFontGlyph *qglyph = g.Font->FindGlyphRaqm(qglyphs[i].index);
+                                char mchar[4];
                                 int charL = utf8_encode(mchar, qglyph->Codepoint);
                                 finalText.append(mchar);
                             }
@@ -381,8 +384,8 @@ const void ImFont::Text_to_ComplexUnicode( const char* text_begin, const char* t
                     qglyphs = raqm_get_glyphs(raqm_buf, &q_count);
                     for (size_t i = 0; i < q_count; i++)
                     {
-                        const ImFontGlyph *qglyph = FindGlyphRaqm(qglyphs[i].index);
-                        char *mchar;
+                        const ImFontGlyph *qglyph = g.Font->FindGlyphRaqm(qglyphs[i].index);
+                        char mchar[4];
                         int charL = utf8_encode(mchar, qglyph->Codepoint);
                         finalText.append(mchar);
                     }
@@ -391,6 +394,10 @@ const void ImFont::Text_to_ComplexUnicode( const char* text_begin, const char* t
         }
     }
 
-    out_text_begin = finalText.c_str();
-    out_text_end = out_text_begin + finalText.length();
+    const char* ctext= finalText.c_str();
+    // *out_text_begin = ctext;
+    *out_text_length = strlen(ctext);
+    // *out_text_end = ctext + ctext(ctext);
+    printf("%s (%d) (%s) <-%d, ",text_begin,strlen(text_begin), ctext,ctext);
+    return finalText;
 }
