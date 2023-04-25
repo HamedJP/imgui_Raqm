@@ -2885,7 +2885,7 @@ const ImWchar*   ImFontAtlas::GetGlyphRangesArabic()
         0xFDCF, 0xFDCF,
         0xFDF0, 0xFDFF,
         0xFE70, 0xFEF4,
-        0xFE76, 0xFEFB,
+        0xFE76, 0xFEFC,
         0xFEFF, 0xFEFF,
         0,
     };
