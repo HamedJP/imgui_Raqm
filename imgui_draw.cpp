@@ -3705,7 +3705,7 @@ void ImFont::RenderText(ImDrawList* draw_list, float size, const ImVec2& pos, Im
 
     //---------------------------------------------------------
     //---------------------------------------------------------------------------
-    if(ComplexText::raqm_complex)
+    if(false)//ComplexText::raqm_complex)
     {
         raqm_direction_t dir = RAQM_DIRECTION_DEFAULT;
         const char *line_begin = text_begin;

@@ -3298,5 +3298,5 @@ namespace ComplexText{
 
     inline bool        raqm_complex = false;
 }
-std::string Text_to_ComplexUnicode( const char* text_begin, const char* text_end, int* out_text_length);
+std::string Text_to_ComplexUnicode( const char* text_begin, const char* text_end);
 //------------------------------------------

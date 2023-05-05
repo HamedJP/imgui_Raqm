@@ -1,4 +1,5 @@
-#include "imgui_internal.h"
+﻿#include "imgui_internal.h"
+#include <iostream>
 // using namespace ComplexText;
 
 void ImFontAtlas::EnableComplexTextLayout()
@@ -79,7 +80,7 @@ void ImFont::BuildRaqmLookupTable()
     size_t q_count;
     raqm_direction_t dir = RAQM_DIRECTION_DEFAULT;
     raqm_glyph_t *qglyphs;
-    int _raqmLookup[Glyphs.Size];
+    int* _raqmLookup=new int[Glyphs.Size];
 
     if (!raqm_set_invisible_glyph(raqm_buf, -1))
     {
@@ -112,21 +113,20 @@ void ImFont::BuildRaqmLookupTable()
                 else{
                     _raqmLookup[i] = -1;
                 }
-                // printf("%d- '%s': qindex: %d, codepoint: %d\n",i, unicode_char, qglyphs[0].index, codepoint);
+                //printf("%d- '%s': qindex: %d, codepoint: %x (%d)\n",i, unicode_char, qglyphs[0].index, codepoint, codepoint);
+                
             }
         }
     }
     printf("\n");
     if (max_raqm_codepoint + 1 > IndexRaqmLookup.Size)
         IndexRaqmLookup.resize(max_raqm_codepoint + 1, -1.0f);
-    
+    ImWchar defaultValue = IndexRaqmLookup.Data[0];
+    printf("Default value: %d\n", defaultValue);
     for (size_t i = 0; i < Glyphs.Size; i++)
     {
-        if (0 < _raqmLookup[ i])
-        {
-            if(IndexRaqmLookup[_raqmLookup[ i]] <1)//_raqmLookup[2 * i + 1];
-                IndexRaqmLookup[_raqmLookup[ i]] = (ImWchar)i;//_raqmLookup[2 * i + 1];
-        }
+        if (0 < _raqmLookup[i] && IndexRaqmLookup[_raqmLookup[i]] == defaultValue)//_raqmLookup[2 * i + 1];
+                IndexRaqmLookup[_raqmLookup[i]] = (ImWchar)i;//_raqmLookup[2 * i + 1];
     }
 }
 
@@ -299,7 +299,7 @@ void ImFont::RenderGlyphs(ImDrawList* draw_list, float size, const ImVec2& pos, 
     draw_list->_VtxCurrentIdx = vtx_index;
 }
 
-std::string Text_to_ComplexUnicode( const char* text_begin, const char* text_end, int* out_text_length)
+std::string Text_to_ComplexUnicode( const char* text_begin, const char* text_end)
 {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
@@ -396,8 +396,7 @@ std::string Text_to_ComplexUnicode( const char* text_begin, const char* text_end
 
     const char* ctext= finalText.c_str();
     // *out_text_begin = ctext;
-    *out_text_length = strlen(ctext);
     // *out_text_end = ctext + ctext(ctext);
-    printf("%s (%d) (%s) <-%d, ",text_begin,strlen(text_begin), ctext,ctext);
+    //printf("%s, (%d) (%s) <-%d, ",text_begin,strlen(text_begin), ctext,ctext);
     return finalText;
 }

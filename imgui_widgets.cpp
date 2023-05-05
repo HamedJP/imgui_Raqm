@@ -159,14 +159,11 @@ void ImGui::TextEx(const char* text, const char* text_end, ImGuiTextFlags flags)
     if (text == text_end)
         text = text_end = "";
     // //---------------------------------
-    // int new_text_length;
-    // std::string new_string = Text_to_ComplexUnicode(text, text_end, &new_text_length);
-    // const char *new_text = new_string.c_str();
-    // printf("%d -> %s - %s :  %d \n", new_text, new_text, new_string, new_text_length);
-    // const char *new_text_end =new_text +strlen(new_text);
+     std::string new_string = Text_to_ComplexUnicode(text, text_end);
+     const char *new_text = new_string.c_str();
 
-    // text = new_text;
-    // text_end = new_text_end;
+     text = new_text;
+     text_end = new_text + strlen(new_text);
 
     // //---------------------------------
     // Calculate length
@@ -4179,10 +4176,10 @@ bool ImGui::InputTextEx(const char* label, const char* hint, char* buf, int buf_
         
     //---------------------------------
     int new_text_length;
-    std::string new_string = Text_to_ComplexUnicode(buf, buf+(int)strlen(buf), &new_text_length);
+    std::string new_string = Text_to_ComplexUnicode(buf, buf+(int)strlen(buf));
     const char *new_text = new_string.c_str();
     // printf("%d -> %s - %s :  %d \n", new_text, new_text, new_string, new_text_length);
-    const char *new_text_end =new_text +strlen(new_text);
+    const char *new_text_end =new_text + strlen(new_text);
 
     buf = (char*)new_text;
 
