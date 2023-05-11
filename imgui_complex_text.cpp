@@ -322,7 +322,7 @@ std::string Text_to_ComplexUnicode( const char* text_begin, const char* text_end
         else
             s += ImTextCharFromUtf8(&c, s, text_end);
 
-        if (c == '\n')
+        if (c == '\n'|| s== text_end)
         {
             if (raqm_complex && library != NULL && face != NULL && raqm_buf != NULL)
             {
@@ -358,35 +358,5 @@ std::string Text_to_ComplexUnicode( const char* text_begin, const char* text_end
             continue;
     }
 
-    if (line_begin < text_end)
-    {
-        if (raqm_complex && library != NULL && face != NULL && raqm_buf != NULL)
-        {
-            raqm_clear_contents(raqm_buf);
-            size_t q_count;
-            raqm_glyph_t *qglyphs;
-
-            if (raqm_buf != NULL)
-            {
-                int mystrlength = text_end - line_begin;
-
-                if (raqm_set_text_utf8(raqm_buf, line_begin, mystrlength) &&
-                    raqm_set_freetype_face(raqm_buf, face) &&
-                    raqm_set_par_direction(raqm_buf, dir) &&
-                    raqm_set_language(raqm_buf, "fa", 0, mystrlength) &&
-                    raqm_layout(raqm_buf))
-                {
-                    qglyphs = raqm_get_glyphs(raqm_buf, &q_count);
-                    for (size_t i = 0; i < q_count; i++)
-                    {
-                        const ImFontGlyph *qglyph = g.Font->FindGlyphRaqm(qglyphs[i].index);
-                        char mchar[4];
-                        int charL = utf8_encode(mchar, qglyph->Codepoint);
-                        finalText.append(mchar);
-                    }
-                }
-            }
-        }
-    }
     return finalText;
 }
